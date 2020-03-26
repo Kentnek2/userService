@@ -1,0 +1,44 @@
+plugins {
+	id 'org.springframework.boot' version '2.2.5.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'java'
+	id 'com.palantir.docker' version "0.19.2"
+	id 'com.palantir.docker-run' version "0.19.2"
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation'org.postgresql:postgresql'
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+}
+
+test {
+	useJUnitPlatform()
+}
+
+docker {
+	name "${project.name}"  // название образа
+	tags "${version}"       // дополнительный тег (добавляет отдельную задачу)
+	files jar.archivePath   // передаем jar в контекст
+	buildArgs([JAR_FILE: "${jar.archiveName}"]) // передаем имя jar в качестве аргумента сборки
+	noCache true // опция --no-cache
+}
+// конфигурация запуска контейнера
+dockerRun {
+	name "${project.name}-inst" // опция --name
+	image "${project.name}" // имя образа
+	ports '8080:8080' // опция -p
+	daemonize true // опция -d
+	clean true // опция --rm
+}
